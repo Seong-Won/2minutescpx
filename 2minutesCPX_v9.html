@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2분 CPX</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f8fd;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:1rem}
+#app{width:100%;max-width:900px}
+.page{display:none;width:100%}
+.page.active{display:flex;flex-direction:column}
+.logo{font-size:16px;font-weight:500;color:#185FA5;letter-spacing:-0.3px}
+.logo span{font-size:10px;font-weight:400;color:#378ADD;margin-left:4px;vertical-align:middle}
+.p-header{padding:0.75rem 1rem;border-bottom:0.5px solid #B5D4F4;background:#E6F1FB;display:flex;align-items:center;justify-content:space-between;border-radius:12px 12px 0 0}
+.counter-badge{font-size:12px;font-weight:500;color:#185FA5;background:#fff;padding:4px 12px;border-radius:20px;border:0.5px solid #85B7EB}
+
+/* PAGE 1 */
+#page1{border:0.5px solid #B5D4F4;border-radius:12px;overflow:hidden;background:#fff}
+.p1-body{display:flex;flex-direction:column}
+.section{padding:1rem;border-bottom:0.5px solid #B5D4F4}
+.sec-title{font-size:10px;font-weight:500;color:#185FA5;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.5rem;text-align:center}
+.sel-row{display:flex;gap:6px;margin-bottom:8px}
+.sel-btn{font-size:11px;padding:3px 9px;border:0.5px solid #85B7EB;border-radius:20px;background:transparent;cursor:pointer;color:#378ADD}
+.sel-btn:hover{background:#E6F1FB}
+.symptom-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.symptom-item{display:flex;align-items:center;gap:5px;padding:4px;border-radius:6px;transition:background 0.15s;width:100%}
+.symptom-item:hover{background:#E6F1FB}
+.symptom-item input[type=checkbox]{width:13px;height:13px;cursor:pointer;accent-color:#185FA5;flex-shrink:0}
+.symptom-item label{font-size:11.5px;color:#1a1a1a;cursor:pointer;line-height:1.35;flex:1;min-width:0}
+.extra-time-badge{font-size:9.5px;padding:2px 5px;border:0.5px solid #85B7EB;border-radius:10px;color:#185FA5;background:#E6F1FB;cursor:pointer;white-space:nowrap;flex-shrink:0;user-select:none;display:none}
+.symptom-item.checked .extra-time-badge{display:inline-flex;align-items:center}
+.extra-time-badge.has-extra{background:#185FA5;color:#fff;border-color:#185FA5}
+.memo-icon{font-size:12px;cursor:pointer;color:#85B7EB;flex-shrink:0;display:none;line-height:1}
+.symptom-item.checked .memo-icon{display:inline}
+.memo-icon.has-memo{color:#185FA5}
+.custom-sym-row{display:flex;align-items:center;gap:5px;padding:4px;border-radius:6px;transition:background 0.15s;width:100%;margin-top:2px}
+.custom-sym-row:hover{background:#E6F1FB}
+.custom-sym-row input[type=checkbox]{width:13px;height:13px;accent-color:#185FA5;flex-shrink:0}
+.custom-sym-row input[type=text]{flex:1;font-size:11.5px;padding:2px 6px;border:0.5px solid #85B7EB;border-radius:6px;background:#fff;color:#1a1a1a;outline:none;min-width:0}
+.custom-sym-row input[type=text]:focus{border-color:#185FA5}
+.del-btn{width:16px;height:16px;border:0.5px solid #85B7EB;border-radius:50%;background:transparent;color:#378ADD;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s}
+.del-btn:hover{background:#E6F1FB;color:#A32D2D;border-color:#F09595}
+.add-btn{margin-top:0.5rem;width:100%;padding:5px;font-size:11.5px;border:0.5px dashed #85B7EB;border-radius:8px;background:transparent;color:#378ADD;cursor:pointer;transition:background 0.15s}
+.add-btn:hover{background:#E6F1FB}
+.sym-toggle{width:100%;text-align:left;padding:0.5rem 0;font-size:12px;color:#185FA5;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;gap:4px}
+.sym-toggle .arr{transition:transform 0.2s;display:inline-block}
+.sym-toggle.open .arr{transform:rotate(90deg)}
+#sym-collapse{overflow:hidden;max-height:0;transition:max-height 0.3s ease}
+#sym-collapse.open{max-height:2800px}
+.p1-bottom{display:flex;border-top:0.5px solid #B5D4F4}
+.p1-col{flex:1;padding:1rem;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.6rem;border-right:0.5px solid #B5D4F4}
+.p1-col:last-child{border-right:none}
+.timer-display{font-size:36px;font-weight:500;color:#0C447C;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+.timer-row{display:flex;align-items:center;gap:6px}
+.t-btn{width:26px;height:26px;border:0.5px solid #85B7EB;border-radius:50%;background:transparent;font-size:14px;cursor:pointer;color:#185FA5;display:flex;align-items:center;justify-content:center;transition:background 0.15s}
+.t-btn:hover{background:#E6F1FB}
+.t-unit{font-size:10px;color:#378ADD;min-width:20px;text-align:center}
+.timer-label{font-size:10px;color:#378ADD;text-align:center}
+.settings-inner{display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;max-width:180px}
+.setting-row{display:flex;align-items:center;gap:7px;padding:4px 0;width:100%}
+.setting-row input[type=checkbox]{width:13px;height:13px;accent-color:#185FA5;cursor:pointer;flex-shrink:0}
+.setting-row label{font-size:11.5px;color:#1a1a1a;cursor:pointer;flex:1;line-height:1.3}
+.info-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#B5D4F4;color:#185FA5;font-size:9px;font-weight:700;cursor:pointer;flex-shrink:0;position:relative;user-select:none}
+.info-icon:hover .tooltip,.info-icon:focus .tooltip{display:block}
+.tooltip{display:none;position:absolute;left:18px;top:50%;transform:translateY(-50%);background:#0C447C;color:#fff;font-size:10.5px;font-weight:400;padding:5px 9px;border-radius:7px;z-index:50;pointer-events:none;line-height:1.4;min-width:160px;max-width:220px;white-space:normal}
+.tooltip::before{content:'';position:absolute;right:100%;top:50%;transform:translateY(-50%);border:5px solid transparent;border-right-color:#0C447C}
+.start-btn{width:90px;height:90px;border-radius:50%;background:#185FA5;border:none;color:#E6F1FB;font-size:16px;font-weight:500;cursor:pointer;transition:transform 0.15s,background 0.15s;display:flex;align-items:center;justify-content:center}
+.start-btn:hover{background:#0C447C;transform:scale(1.04)}
+.start-btn:active{transform:scale(0.97)}
+.warning{font-size:11px;color:#c0392b;text-align:center;min-height:14px;padding:0.25rem 1rem 0.5rem}
+
+/* PAGE 2 */
+#page2{border:0.5px solid #B5D4F4;border-radius:12px;overflow:hidden;background:#fff;position:relative;min-height:520px}
+.p2-body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;padding:1.25rem;padding-top:4.5rem;min-height:520px}
+.countdown-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;z-index:10;border-radius:12px;gap:1.25rem}
+.countdown-num{font-size:80px;font-weight:500;color:#185FA5;animation:pop 0.4s ease}
+.skip-btn{padding:7px 20px;border:0.5px solid #85B7EB;border-radius:8px;background:transparent;color:#378ADD;font-size:13px;cursor:pointer}
+@keyframes pop{0%{transform:scale(1.5);opacity:0}100%{transform:scale(1);opacity:1}}
+.p2-timer{font-size:60px;font-weight:500;color:#0C447C;font-variant-numeric:tabular-nums;letter-spacing:-2px}
+.p2-timer.urgent{color:#A32D2D}
+.p2-timer.overtime{color:#E24B4A}
+.p2-timer-sub{font-size:12px;color:#85B7EB;text-align:center;min-height:18px;font-weight:400}
+.p2-timer-sub.time-end{color:#E24B4A;font-weight:500}
+.symptom-card{width:100%;max-width:320px;min-height:72px;background:#E6F1FB;border:0.5px solid #85B7EB;border-radius:12px;display:flex;align-items:center;justify-content:center;padding:0.9rem 1.5rem;font-size:19px;font-weight:500;color:#0C447C;text-align:center;transition:background 0.15s}
+.symptom-card.clickable{cursor:pointer;color:#378ADD;font-size:15px}
+.symptom-card.clickable:hover{background:#d6eaf8}
+.extra-time-info{font-size:11px;color:#185FA5;min-height:16px;text-align:center}
+.p2-controls{display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;justify-content:center}
+.p2-btn{padding:7px 14px;border:0.5px solid #85B7EB;border-radius:8px;background:transparent;color:#185FA5;font-size:13px;cursor:pointer;transition:background 0.15s;white-space:nowrap}
+.p2-btn:hover{background:#E6F1FB}
+.icon-btn{width:38px;height:38px;border:0.5px solid #85B7EB;border-radius:50%;background:transparent;color:#185FA5;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s;flex-shrink:0}
+.icon-btn:hover{background:#E6F1FB}
+.next-symp-btn{padding:7px 14px;border:0.5px solid #85B7EB;border-radius:8px;background:transparent;color:#185FA5;font-size:13px;cursor:pointer;white-space:nowrap}
+.next-symp-btn:hover{background:#E6F1FB}
+
+/* PAGE 3 */
+#page3{border:0.5px solid #B5D4F4;border-radius:12px;overflow:hidden;background:#fff;min-height:400px}
+.p3-body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;padding:3rem 2rem;min-height:400px}
+.p3-msg{font-size:22px;font-weight:500;color:#0C447C;text-align:center}
+.p3-sub{font-size:14px;color:#378ADD;text-align:center}
+.p3-btn{padding:12px 32px;background:#185FA5;border:none;border-radius:10px;color:#E6F1FB;font-size:15px;font-weight:500;cursor:pointer;transition:background 0.15s}
+.p3-btn:hover{background:#0C447C}
+
+/* MEMO MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.38);z-index:100;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:12px;border:0.5px solid #B5D4F4;width:100%;max-width:620px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-header{padding:0.75rem 1rem;background:#E6F1FB;border-bottom:0.5px solid #B5D4F4;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:8px}
+.modal-title{font-size:14px;font-weight:500;color:#0C447C;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.modal-header-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.modal-close{width:26px;height:26px;border:none;background:transparent;font-size:18px;cursor:pointer;color:#378ADD;display:flex;align-items:center;justify-content:center;border-radius:50%;flex-shrink:0}
+.modal-close:hover{background:#E6F1FB}
+.modal-hdr-edit-btn{padding:4px 12px;border:0.5px solid #85B7EB;border-radius:20px;background:transparent;font-size:12px;color:#378ADD;cursor:pointer;white-space:nowrap}
+.modal-hdr-edit-btn:hover{background:#E6F1FB}
+.modal-body{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:0.75rem}
+.editor-wrap{display:flex;flex-direction:column;gap:0}
+.editor-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:6px 8px;background:#f8fbff;border:0.5px solid #B5D4F4;border-bottom:none;border-radius:8px 8px 0 0}
+.tb-btn{padding:3px 8px;border:0.5px solid #B5D4F4;border-radius:5px;background:#fff;font-size:12px;cursor:pointer;color:#185FA5;line-height:1.4;transition:background 0.12s}
+.tb-btn:hover{background:#E6F1FB}
+.memo-editor{width:100%;min-height:260px;font-size:13px;line-height:1.7;border:0.5px solid #B5D4F4;border-radius:0 0 8px 8px;padding:0.75rem;outline:none;color:#1a1a1a;font-family:inherit;overflow-y:auto}
+.memo-editor:focus{border-color:#185FA5;border-top-color:#B5D4F4}
+.memo-editor img{max-width:100%;border-radius:8px;margin:4px 0;display:block}
+.memo-view{font-size:13px;line-height:1.7;color:#1a1a1a;min-height:200px}
+.memo-view img{max-width:100%;border-radius:8px;margin:4px 0;display:block}
+.memo-view strong{font-weight:600}
+.memo-view em{font-style:italic;color:#378ADD}
+.memo-placeholder{color:#85B7EB;font-size:13px}
+.modal-footer{padding:0.6rem 1rem;border-top:0.5px solid #B5D4F4;display:flex;justify-content:flex-end;gap:8px;flex-shrink:0}
+.modal-save-btn{padding:6px 18px;background:#185FA5;border:none;border-radius:8px;color:#fff;font-size:13px;cursor:pointer}
+.modal-save-btn:hover{background:#0C447C}
+
+/* EXTRA TIME POPUP */
+.extra-popup{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:200;align-items:center;justify-content:center}
+.extra-popup.open{display:flex}
+.extra-box{background:#fff;border-radius:12px;border:0.5px solid #B5D4F4;padding:1.25rem;width:260px;display:flex;flex-direction:column;gap:0.75rem}
+.extra-box-title{font-size:14px;font-weight:500;color:#0C447C}
+.extra-box-sub{font-size:11px;color:#378ADD}
+.extra-stepper{display:flex;align-items:center;justify-content:center;gap:12px}
+.extra-val{font-size:28px;font-weight:500;color:#0C447C;min-width:70px;text-align:center;font-variant-numeric:tabular-nums}
+.extra-s-btn{width:32px;height:32px;border:0.5px solid #85B7EB;border-radius:50%;background:transparent;font-size:18px;color:#185FA5;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.extra-s-btn:hover{background:#E6F1FB}
+.extra-actions{display:flex;gap:8px;justify-content:flex-end}
+.extra-ok{padding:6px 18px;background:#185FA5;border:none;border-radius:8px;color:#fff;font-size:13px;cursor:pointer}
+.extra-ok:hover{background:#0C447C}
+.extra-cancel{padding:6px 14px;border:0.5px solid #85B7EB;border-radius:8px;background:transparent;color:#378ADD;font-size:13px;cursor:pointer}
+
+@media(min-width:600px){
+  body{padding:1.5rem}
+  .symptom-grid{grid-template-columns:1fr 1fr 1fr}
+  .symptom-item label,.custom-sym-row input[type=text]{font-size:12.5px}
+  .symptom-item input[type=checkbox],.custom-sym-row input[type=checkbox]{width:14px;height:14px}
+  .timer-display{font-size:42px}
+  .start-btn{width:100px;height:100px;font-size:18px}
+  .p2-timer{font-size:68px}
+  .symptom-card{font-size:21px}
+  .symptom-card.clickable{font-size:15px}
+  .p2-body{padding-top:5rem}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- PAGE 1 -->
+<div id="page1" class="page active">
+  <div class="p-header">
+    <div class="logo">2분 CPX <span>Clinical Performance Exam</span></div>
+  </div>
+  <div class="p1-body">
+    <div class="section">
+      <div class="sec-title" style="text-align:left">주증상 선택</div>
+      <div class="sel-row">
+        <button class="sel-btn" onclick="toggleAll(true)">전체 선택</button>
+        <button class="sel-btn" onclick="toggleAll(false)">전체 해제</button>
+      </div>
+      <button class="sym-toggle open" id="sym-toggle-btn" onclick="toggleSymList()">
+        <span class="arr">›</span> 주증상 목록 보기/숨기기
+      </button>
+      <div id="sym-collapse" class="open">
+        <div class="symptom-grid" id="symptom-list"></div>
+        <div id="custom-list"></div>
+        <button class="add-btn" onclick="addCustomRow()">+ 주증상 추가</button>
+      </div>
+    </div>
+    <div class="p1-bottom">
+      <div class="p1-col">
+        <div class="sec-title">타이머 설정</div>
+        <div class="timer-display" id="timer-preview">2:00</div>
+        <div class="timer-row">
+          <button class="t-btn" onclick="adjustTimer(-60)">−</button>
+          <span class="t-unit">1분</span>
+          <button class="t-btn" onclick="adjustTimer(60)">+</button>
+        </div>
+        <div class="timer-row">
+          <button class="t-btn" onclick="adjustTimer(-10)">−</button>
+          <span class="t-unit">10초</span>
+          <button class="t-btn" onclick="adjustTimer(10)">+</button>
+        </div>
+        <div class="timer-label">기본값 2분 / 최소 10초</div>
+      </div>
+      <div class="p1-col">
+        <div class="sec-title">개인 설정</div>
+        <div class="settings-inner">
+          <div class="setting-row">
+            <input type="checkbox" id="set-first-countdown" checked>
+            <label for="set-first-countdown">첫번째 카운트다운</label>
+            <span class="info-icon" tabindex="0">i<span class="tooltip">시작 버튼을 누른 후 첫 번째 주증상 시작 전에만 3·2·1 카운트다운을 표시합니다.</span></span>
+          </div>
+          <div class="setting-row">
+            <input type="checkbox" id="set-countdown" checked>
+            <label for="set-countdown">나머지 카운트다운</label>
+            <span class="info-icon" tabindex="0">i<span class="tooltip">두 번째 주증상부터 각 학습 시작 전에 3·2·1 카운트다운을 표시합니다.</span></span>
+          </div>
+          <div class="setting-row">
+            <input type="checkbox" id="set-show-extra" checked>
+            <label for="set-show-extra">시간 추가 표시</label>
+            <span class="info-icon" tabindex="0">i<span class="tooltip">추가 시간이 설정된 주증상에 대해 "⏱ 추가 시간 +N초" 안내를 표시합니다.</span></span>
+          </div>
+          <div class="setting-row">
+            <input type="checkbox" id="set-overtime" checked>
+            <label for="set-overtime">시간 초과 표시</label>
+            <span class="info-icon" tabindex="0">i<span class="tooltip">타이머가 0이 된 후에도 마이너스(-) 초과 시간을 빨간색으로 표시합니다. 꺼두면 "시간 종료" 메시지가 표시됩니다.</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="p1-col">
+        <button class="start-btn" onclick="startSession()">시작</button>
+      </div>
+    </div>
+    <div class="warning" id="warn"></div>
+  </div>
+</div>
+
+<!-- PAGE 2 -->
+<div id="page2" class="page">
+  <div class="p-header">
+    <div class="logo">2분 CPX <span>Clinical Performance Exam</span></div>
+    <div class="counter-badge" id="counter">0/0</div>
+  </div>
+  <div class="countdown-overlay" id="countdown-overlay" style="display:none">
+    <div class="countdown-num" id="countdown-num">3</div>
+    <button class="skip-btn" onclick="skipCountdown()">바로 시작</button>
+  </div>
+  <div class="p2-body">
+    <div class="p2-timer" id="p2-timer">2:00</div>
+    <div class="p2-timer-sub" id="p2-timer-sub"></div>
+    <div class="symptom-card clickable" id="symptom-card" onclick="handleCardClick()">주증상 보기</div>
+    <div class="extra-time-info" id="extra-time-info"></div>
+    <div class="p2-controls" id="p2-controls">
+      <button class="p2-btn" onclick="goHome()">‹ 처음으로</button>
+      <button class="icon-btn" id="playstop-btn" onclick="toggleTimer()">⏸</button>
+      <button class="next-symp-btn" id="next-symp-btn" onclick="nextSymptom()">다음 ›</button>
+      <button class="icon-btn" id="memo-p2-btn" onclick="openMemoP2()" title="메모" style="display:none">📝</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 3 -->
+<div id="page3" class="page">
+  <div class="p-header">
+    <div class="logo">2분 CPX <span>Clinical Performance Exam</span></div>
+  </div>
+  <div class="p3-body">
+    <div style="font-size:48px">🎉</div>
+    <div class="p3-msg">학습이 완료되었습니다!</div>
+    <div class="p3-sub" id="p3-sub"></div>
+    <button class="p3-btn" onclick="goHome()">처음으로</button>
+  </div>
+</div>
+
+</div><!-- #app -->
+
+<!-- MEMO MODAL — P2: no close button in footer (header X only) -->
+<div class="modal-overlay" id="memo-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="memo-modal-title">메모</div>
+      <div class="modal-header-right">
+        <button class="modal-hdr-edit-btn" id="memo-hdr-edit-btn" style="display:none" onclick="switchToEdit()">편집</button>
+        <button class="modal-close" onclick="closeMemo()">×</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div id="edit-pane">
+        <div class="editor-wrap">
+          <div class="editor-toolbar">
+            <button class="tb-btn" onclick="tbCmd('bold')"><b>B</b></button>
+            <button class="tb-btn" onclick="tbCmd('italic')"><i>I</i></button>
+            <button class="tb-btn" onclick="tbCmd('underline')"><u>U</u></button>
+            <button class="tb-btn" onclick="tbCmd('strikeThrough')"><s>S</s></button>
+            <button class="tb-btn" onclick="tbInsertList('insertUnorderedList')">• 목록</button>
+            <button class="tb-btn" onclick="tbInsertList('insertOrderedList')">1. 목록</button>
+            <button class="tb-btn" onclick="tbCmd('insertHorizontalRule')">— 선</button>
+            <button class="tb-btn" onclick="tbLink()">🔗</button>
+            <button class="tb-btn" style="color:#85B7EB;font-size:11px" title="이미지: Ctrl/Cmd+V">📷 붙여넣기</button>
+          </div>
+          <div class="memo-editor" id="memo-editor" contenteditable="true" spellcheck="false"></div>
+        </div>
+      </div>
+      <div id="view-pane" style="display:none">
+        <div class="memo-view" id="memo-view"></div>
+      </div>
+    </div>
+    <!-- P1: save button shown. P2: only X in header, no footer buttons -->
+    <div class="modal-footer" id="memo-footer">
+      <button class="modal-save-btn" id="memo-save-btn" onclick="saveMemo()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXTRA TIME POPUP -->
+<div class="extra-popup" id="extra-popup">
+  <div class="extra-box">
+    <div class="extra-box-title" id="extra-popup-title">추가 시간 설정</div>
+    <div class="extra-box-sub">이 주증상에 추가할 시간 (초)</div>
+    <div class="extra-stepper">
+      <button class="extra-s-btn" onclick="changeExtra(-10)">−</button>
+      <div class="extra-val" id="extra-val">0초</div>
+      <button class="extra-s-btn" onclick="changeExtra(10)">+</button>
+    </div>
+    <div class="extra-actions">
+      <button class="extra-cancel" onclick="closeExtraPopup()">취소</button>
+      <button class="extra-ok" onclick="confirmExtra()">확인</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SYMPTOMS=['급성 복통','소변량 변화(다뇨증/핍뇨)','두통','소화불량/만성 복통','붉은색 소변','경련','토혈','배뇨 이상/소변찔끔증','근력/감각 이상','혈변','발열','의식장애','구토','쉽게 멍이 듦','떨림/운동 이상','배변 이상(변비/설사)','피로','유방통/유방덩이','황달','체중 감소','질분비물/질출혈','가슴 통증','체중 증가/비만','월경 이상/월경통','실신','관절 통증/부기','산전 진찰','두근거림','목 통증/허리 통증','성장/발달 지연','고혈압','피부 발진','예방접종','이상지질혈증','기분 변화','음주/금연 상담','기침','불안','물질 오남용','콧물/코막힘','수면장애','나쁜 소식 전하기','객혈','기억력 저하','가정 폭력/성 폭력','호흡곤란','어지럼','자살'];
+
+// ── State ────────────────────────────────────────────────────────
+let timerSecs=120, p2Secs=0, p2Total=120, baseTimerSecs=120;
+let timerInterval=null, running=false;
+let remaining=[], totalCount=0, countdownTO=null;
+let currentSymptom=null, isOvertime=false;
+let isFirstSymptom=true, symptomRevealed=false;
+let memoOpenedFromP2=false;
+const symptomData={};
+
+function getSD(n){if(!symptomData[n])symptomData[n]={extraSecs:0,html:''};return symptomData[n];}
+function getSetting(id){return document.getElementById(id).checked;}
+
+// ── Build list ───────────────────────────────────────────────────
+function buildList(){
+  const el=document.getElementById('symptom-list');
+  el.innerHTML='';
+  SYMPTOMS.forEach((s,i)=>el.appendChild(makeSymptomRow(s,'s'+i)));
+}
+function makeSymptomRow(name,id){
+  const row=document.createElement('div');
+  row.className='symptom-item';row.dataset.name=name;
+  const cb=document.createElement('input');cb.type='checkbox';cb.id=id;cb.value=name;
+  cb.addEventListener('change',()=>updateRowState(row,cb.checked));
+  const lbl=document.createElement('label');lbl.htmlFor=id;lbl.textContent=name;
+  const extraBtn=makeExtraBtn(name);
+  const memoBtn=makeMemoBtn(name);
+  row.appendChild(cb);row.appendChild(lbl);row.appendChild(extraBtn);row.appendChild(memoBtn);
+  return row;
+}
+function makeExtraBtn(name){
+  const b=document.createElement('span');b.className='extra-time-badge';b.title='추가 시간 설정';
+  b.addEventListener('click',e=>{e.stopPropagation();openExtraPopup(name,b);});
+  updateExtraBtn(b,name);return b;
+}
+function makeMemoBtn(name){
+  const b=document.createElement('span');b.className='memo-icon';b.textContent='📝';b.title='메모';
+  b.addEventListener('click',e=>{e.stopPropagation();openMemo(name,false);});
+  updateMemoBtn(b,name);return b;
+}
+function addCustomRow(){
+  const list=document.getElementById('custom-list');
+  const row=document.createElement('div');row.className='custom-sym-row';row.dataset.name='';
+  const cb=document.createElement('input');cb.type='checkbox';cb.checked=true;cb.value='';
+  const inp=document.createElement('input');inp.type='text';inp.placeholder='새로운 주증상 입력';
+  const extraBtn=document.createElement('span');extraBtn.className='extra-time-badge';extraBtn.style.display='inline-flex';extraBtn.title='추가 시간 설정';
+  const memoBtn=document.createElement('span');memoBtn.className='memo-icon';memoBtn.style.display='inline';memoBtn.textContent='📝';memoBtn.title='메모';
+  const del=document.createElement('button');del.className='del-btn';del.textContent='−';del.addEventListener('click',()=>row.remove());
+  inp.addEventListener('input',()=>{
+    const newKey=inp.value.trim(),oldKey=row.dataset.name;
+    if(oldKey&&oldKey!==newKey&&symptomData[oldKey]){symptomData[newKey]=symptomData[oldKey];delete symptomData[oldKey];}
+    cb.value=newKey;row.dataset.name=newKey;
+    updateExtraBtn(extraBtn,newKey);updateMemoBtn(memoBtn,newKey);
+  });
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();});
+  extraBtn.addEventListener('click',e=>{e.stopPropagation();const n=row.dataset.name;if(n)openExtraPopup(n,extraBtn);else alert('먼저 주증상 이름을 입력하세요.');});
+  memoBtn.addEventListener('click',e=>{e.stopPropagation();const n=row.dataset.name;if(n)openMemo(n,false);else alert('먼저 주증상 이름을 입력하세요.');});
+  updateExtraBtn(extraBtn,'');
+  row.appendChild(cb);row.appendChild(inp);row.appendChild(extraBtn);row.appendChild(memoBtn);row.appendChild(del);
+  list.appendChild(row);setTimeout(()=>inp.focus(),50);
+}
+function updateRowState(row,checked){if(checked)row.classList.add('checked');else row.classList.remove('checked');}
+function updateExtraBtn(btn,name){
+  const extra=name?getSD(name).extraSecs:0;
+  if(extra>0){btn.textContent='+'+extra+'s';btn.classList.add('has-extra');}
+  else{btn.textContent='시간 추가';btn.classList.remove('has-extra');}
+}
+function updateMemoBtn(btn,name){
+  const sd=name?getSD(name):null;
+  if(sd&&sd.html&&sd.html.trim())btn.classList.add('has-memo');else btn.classList.remove('has-memo');
+}
+function refreshAllBtns(){
+  document.querySelectorAll('.symptom-item,.custom-sym-row').forEach(row=>{
+    const n=row.dataset.name;if(!n)return;
+    const eb=row.querySelector('.extra-time-badge');const mb=row.querySelector('.memo-icon');
+    if(eb)updateExtraBtn(eb,n);if(mb)updateMemoBtn(mb,n);
+  });
+}
+
+// ── Page 1 ───────────────────────────────────────────────────────
+function toggleAll(val){
+  document.querySelectorAll('#symptom-list input[type=checkbox]').forEach(c=>{
+    c.checked=val;const row=c.closest('.symptom-item');if(row)updateRowState(row,val);
+  });
+}
+function toggleSymList(){
+  document.getElementById('sym-toggle-btn').classList.toggle('open');
+  document.getElementById('sym-collapse').classList.toggle('open');
+}
+function adjustTimer(d){timerSecs=Math.max(10,timerSecs+d);document.getElementById('timer-preview').textContent=fmtPos(timerSecs);}
+function fmtPos(s){const m=Math.floor(s/60),sc=s%60;return m+':'+(sc<10?'0':'')+sc;}
+function fmt(s){const neg=s<0,abs=Math.abs(s),m=Math.floor(abs/60),sc=abs%60;return(neg?'-':'')+m+':'+(sc<10?'0':'')+sc;}
+function getChecked(){
+  const vals=[];
+  document.querySelectorAll('#symptom-list input[type=checkbox]:checked').forEach(c=>{const v=c.value.trim();if(v)vals.push(v);});
+  document.querySelectorAll('#custom-list input[type=checkbox]:checked').forEach(c=>{const v=c.value.trim();if(v)vals.push(v);});
+  return vals;
+}
+function startSession(){
+  const checked=getChecked();
+  if(!checked.length){document.getElementById('warn').textContent='하나 이상의 주증상을 고르세요.';return;}
+  document.getElementById('warn').textContent='';
+  remaining=shuffle([...checked]);totalCount=remaining.length;baseTimerSecs=timerSecs;isFirstSymptom=true;
+  showPage('page2');resetP2UI();
+  const showCD=getSetting('set-first-countdown');
+  if(showCD)runCountdown(3);else startTimer();
+}
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+
+// ── Page switching ───────────────────────────────────────────────
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── Page 2 ───────────────────────────────────────────────────────
+function resetP2UI(){
+  clearInterval(timerInterval);running=false;isOvertime=false;
+  symptomRevealed=false;
+
+  // FIX BUG 2: pre-select next symptom NOW (before card click)
+  // so extra time is baked into the timer from the start.
+  if(remaining.length>0){
+    const idx=Math.floor(Math.random()*remaining.length);
+    currentSymptom=remaining.splice(idx,1)[0];
+  } else {
+    currentSymptom=null;
+  }
+
+  // Apply extra time for the pre-selected symptom
+  const extra=currentSymptom?getSD(currentSymptom).extraSecs:0;
+  p2Total=baseTimerSecs+extra;
+  p2Secs=p2Total;
+
+  const te=document.getElementById('p2-timer');
+  te.textContent=fmtPos(p2Total);te.className='p2-timer';
+  const subEl=document.getElementById('p2-timer-sub');
+  subEl.textContent='';subEl.className='p2-timer-sub';
+
+  // Show extra time info immediately (before reveal)
+  const infoEl=document.getElementById('extra-time-info');
+  if(extra>0 && getSetting('set-show-extra')){
+    infoEl.textContent='⏱ 추가 시간 +'+extra+'초 포함됨';
+  } else {
+    infoEl.textContent='';
+  }
+
+  const card=document.getElementById('symptom-card');
+  card.textContent='주증상 보기';card.className='symptom-card clickable';
+
+  document.getElementById('p2-controls').style.display='';
+  document.getElementById('playstop-btn').textContent='⏸';
+  document.getElementById('playstop-btn').style.display='';
+  document.getElementById('next-symp-btn').style.display='';
+  document.getElementById('memo-p2-btn').style.display='none';
+  updateCounter();
+}
+function updateCounter(){
+  document.getElementById('counter').textContent='남은 주증상: '+remaining.length+'/'+totalCount;
+}
+function runCountdown(n){
+  const overlay=document.getElementById('countdown-overlay');
+  const numEl=document.getElementById('countdown-num');
+  overlay.style.display='flex';numEl.textContent=n===0?'시작!':n;
+  if(n===0){setTimeout(()=>{overlay.style.display='none';startTimer();},500);return;}
+  countdownTO=setTimeout(()=>{
+    numEl.style.animation='none';void numEl.offsetWidth;numEl.style.animation='pop 0.4s ease';
+    runCountdown(n-1);
+  },750);
+}
+function skipCountdown(){clearTimeout(countdownTO);document.getElementById('countdown-overlay').style.display='none';startTimer();}
+function startTimer(){running=true;document.getElementById('playstop-btn').textContent='⏸';clearInterval(timerInterval);timerInterval=setInterval(tick,1000);}
+
+function tick(){
+  if(!running)return;
+  p2Secs--;
+  const te=document.getElementById('p2-timer');
+  const subEl=document.getElementById('p2-timer-sub');
+
+  if(p2Secs>0){
+    te.textContent=fmt(p2Secs);
+    if(!isOvertime)te.classList.toggle('urgent',p2Secs<=10);
+  } else if(p2Secs===0){
+    if(getSetting('set-overtime')){
+      // Overtime ON: keep ticking red. User presses 다음 › to advance (even on last symptom).
+      isOvertime=true;
+      te.className='p2-timer overtime';
+      te.textContent='0:00';
+      subEl.className='p2-timer-sub time-end';
+      subEl.textContent='⏰ 시간 초과';
+    } else {
+      // Overtime OFF: stop, show "시간 종료". User presses 다음 › to advance.
+      clearInterval(timerInterval);running=false;
+      te.textContent='0:00';te.className='p2-timer';
+      subEl.className='p2-timer-sub time-end';
+      subEl.textContent='⏱ 시간 종료';
+      document.getElementById('playstop-btn').style.display='none';
+    }
+  } else {
+    // p2Secs < 0 — overtime continuing
+    if(getSetting('set-overtime')){
+      te.textContent=fmt(p2Secs);te.className='p2-timer overtime';
+      subEl.className='p2-timer-sub time-end';subEl.textContent='⏰ 시간 초과';
+    }
+  }
+}
+
+function toggleTimer(){
+  if(running){running=false;document.getElementById('playstop-btn').textContent='▶';}
+  else{running=true;document.getElementById('playstop-btn').textContent='⏸';}
+}
+
+// Card click: just reveals the pre-selected symptom (no extra time logic here)
+function handleCardClick(){
+  if(symptomRevealed)return;
+  if(!currentSymptom){goPage3();return;}
+  symptomRevealed=true;
+
+  const card=document.getElementById('symptom-card');
+  card.textContent=currentSymptom;card.className='symptom-card';
+  updateCounter();
+
+  const mb=document.getElementById('memo-p2-btn');
+  mb.style.display='';
+  mb.style.color=getSD(currentSymptom).html.trim()?'#185FA5':'';
+  isFirstSymptom=false;
+}
+
+function nextSymptom(){
+  clearInterval(timerInterval);
+  // remaining is already depleted of current symptom (done in resetP2UI).
+  // If nothing left, go to page3.
+  if(!remaining.length){goPage3();return;}
+  resetP2UI(); // this pops next symptom from remaining and sets timer
+  const showCD=getSetting('set-countdown');
+  if(showCD)runCountdown(3);else startTimer();
+}
+
+function goPage3(){
+  clearInterval(timerInterval);running=false;
+  document.getElementById('p3-sub').textContent='총 '+totalCount+'개 주증상 학습 완료';
+  showPage('page3');
+}
+
+function goHome(){
+  clearTimeout(countdownTO);clearInterval(timerInterval);running=false;
+  document.getElementById('memo-modal').classList.remove('open');
+  document.getElementById('extra-popup').classList.remove('open');
+  showPage('page1');
+}
+
+// ── Extra time popup ─────────────────────────────────────────────
+let extraTarget=null,extraTargetBtn=null,extraTempVal=0;
+function openExtraPopup(name,btn){
+  extraTarget=name;extraTargetBtn=btn;extraTempVal=getSD(name).extraSecs;
+  document.getElementById('extra-popup-title').textContent='"'+name+'" 추가 시간';
+  document.getElementById('extra-val').textContent=extraTempVal+'초';
+  document.getElementById('extra-popup').classList.add('open');
+}
+function closeExtraPopup(){document.getElementById('extra-popup').classList.remove('open');extraTarget=null;extraTargetBtn=null;}
+function changeExtra(d){extraTempVal=Math.max(0,extraTempVal+d);document.getElementById('extra-val').textContent=extraTempVal+'초';}
+function confirmExtra(){
+  if(!extraTarget)return;
+  getSD(extraTarget).extraSecs=extraTempVal;
+  if(extraTargetBtn)updateExtraBtn(extraTargetBtn,extraTarget);
+  closeExtraPopup();
+}
+
+// ── Memo modal ───────────────────────────────────────────────────
+let memoTarget=null;
+function openMemo(name,fromP2){
+  memoOpenedFromP2=!!fromP2;memoTarget=name;
+  document.getElementById('memo-modal-title').textContent='"'+name+'" 메모';
+  document.getElementById('memo-editor').innerHTML=getSD(name).html||'';
+  if(fromP2){
+    showViewPane();
+    document.getElementById('memo-hdr-edit-btn').style.display='';
+    document.getElementById('memo-save-btn').style.display='none';
+    document.getElementById('memo-footer').style.display='none'; // hide footer entirely in P2
+  } else {
+    showEditPane();
+    document.getElementById('memo-hdr-edit-btn').style.display='none';
+    document.getElementById('memo-save-btn').style.display='';
+    document.getElementById('memo-footer').style.display='';
+  }
+  document.getElementById('memo-modal').classList.add('open');
+  if(!fromP2)setTimeout(()=>document.getElementById('memo-editor').focus(),100);
+}
+function openMemoP2(){if(currentSymptom)openMemo(currentSymptom,true);}
+function switchToEdit(){
+  showEditPane();
+  document.getElementById('memo-hdr-edit-btn').style.display='none';
+  document.getElementById('memo-save-btn').style.display='';
+  document.getElementById('memo-footer').style.display='';
+  memoOpenedFromP2=false;
+  setTimeout(()=>document.getElementById('memo-editor').focus(),100);
+}
+function showEditPane(){document.getElementById('edit-pane').style.display='';document.getElementById('view-pane').style.display='none';}
+function showViewPane(){
+  const html=document.getElementById('memo-editor').innerHTML;
+  document.getElementById('memo-view').innerHTML=html.trim()||'<span class="memo-placeholder">아직 메모가 없습니다.</span>';
+  document.getElementById('edit-pane').style.display='none';document.getElementById('view-pane').style.display='';
+}
+function closeMemo(){document.getElementById('memo-modal').classList.remove('open');memoTarget=null;memoOpenedFromP2=false;}
+function saveMemo(){
+  if(!memoTarget)return;
+  const html=document.getElementById('memo-editor').innerHTML;
+  getSD(memoTarget).html=html;refreshAllBtns();
+  const mb=document.getElementById('memo-p2-btn');
+  if(mb)mb.style.color=html.trim()?'#185FA5':'';
+  closeMemo();
+}
+
+// ── Toolbar ──────────────────────────────────────────────────────
+function tbCmd(cmd){document.getElementById('memo-editor').focus();document.execCommand(cmd,false,null);}
+function tbInsertList(cmd){document.getElementById('memo-editor').focus();document.execCommand(cmd,false,null);}
+function tbLink(){const url=prompt('링크 URL:','https://');if(url){document.getElementById('memo-editor').focus();document.execCommand('createLink',false,url);}}
+
+// ── Image paste ──────────────────────────────────────────────────
+document.addEventListener('paste',function(e){
+  if(!document.getElementById('memo-modal').classList.contains('open'))return;
+  if(document.getElementById('view-pane').style.display!=='none')return;
+  const items=e.clipboardData&&e.clipboardData.items;if(!items)return;
+  for(let i=0;i<items.length;i++){
+    if(items[i].type.indexOf('image')!==-1){
+      e.preventDefault();
+      const blob=items[i].getAsFile();const reader=new FileReader();
+      reader.onload=ev=>{
+        const img=document.createElement('img');
+        img.src=ev.target.result;img.style.maxWidth='100%';img.style.borderRadius='8px';img.style.margin='4px 0';img.style.display='block';
+        const editor=document.getElementById('memo-editor');editor.focus();
+        const sel=window.getSelection();
+        if(sel.rangeCount){const r=sel.getRangeAt(0);r.deleteContents();r.insertNode(img);r.setStartAfter(img);r.collapse(true);sel.removeAllRanges();sel.addRange(r);}
+        else editor.appendChild(img);
+      };
+      reader.readAsDataURL(blob);return;
+    }
+  }
+});
+
+// ── Touch tooltips ───────────────────────────────────────────────
+document.querySelectorAll('.info-icon').forEach(el=>{
+  el.addEventListener('touchstart',function(e){
+    e.preventDefault();
+    const tt=this.querySelector('.tooltip');
+    const wasVisible=tt.style.display==='block';
+    document.querySelectorAll('.tooltip').forEach(t=>t.style.display='none');
+    if(!wasVisible)tt.style.display='block';
+  });
+});
+document.addEventListener('touchstart',function(e){
+  if(!e.target.closest('.info-icon'))document.querySelectorAll('.tooltip').forEach(t=>t.style.display='none');
+},{passive:true});
+
+document.getElementById('memo-modal').addEventListener('click',function(e){if(e.target===this)closeMemo();});
+document.getElementById('extra-popup').addEventListener('click',function(e){if(e.target===this)closeExtraPopup();});
+
+buildList();
+</script>
+</body>
+</html>
