@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2분 CPX</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f8fd;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:1rem}
+#app{width:100%;max-width:860px}
+.page{display:none;width:100%}
+.page.active{display:flex;flex-direction:column}
+
+.logo{font-size:16px;font-weight:500;color:#185FA5;letter-spacing:-0.3px}
+.logo span{font-size:10px;font-weight:400;color:#378ADD;margin-left:4px;vertical-align:middle}
+
+.p-header{padding:0.75rem 1rem;border-bottom:0.5px solid #B5D4F4;background:#E6F1FB;display:flex;align-items:center;justify-content:space-between;border-radius:12px 12px 0 0}
+.counter-badge{font-size:12px;font-weight:500;color:#185FA5;background:#fff;padding:4px 12px;border-radius:20px;border:0.5px solid #85B7EB}
+
+#page1{border:0.5px solid #B5D4F4;border-radius:12px;overflow:hidden;background:#fff}
+.p1-body{display:flex;flex-direction:column}
+
+.section{padding:1rem;border-bottom:0.5px solid #B5D4F4}
+.section:last-child{border-bottom:none}
+.sec-title{font-size:10px;font-weight:500;color:#185FA5;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:0.5rem}
+.sel-row{display:flex;gap:6px;margin-bottom:8px}
+.sel-btn{font-size:11px;padding:3px 9px;border:0.5px solid #85B7EB;border-radius:20px;background:transparent;cursor:pointer;color:#378ADD}
+.sel-btn:hover{background:#E6F1FB}
+.symptom-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.symptom-item{display:flex;align-items:center;gap:6px;padding:4px;border-radius:6px;cursor:pointer;transition:background 0.15s}
+.symptom-item:hover{background:#E6F1FB}
+.symptom-item input[type=checkbox]{width:13px;height:13px;cursor:pointer;accent-color:#185FA5;flex-shrink:0}
+.symptom-item label{font-size:11.5px;color:#1a1a1a;cursor:pointer;line-height:1.35}
+.custom-input-row{display:flex;align-items:center;gap:6px;padding:3px 4px;margin-top:2px}
+.custom-input-row input[type=checkbox]{width:13px;height:13px;accent-color:#185FA5;flex-shrink:0}
+.custom-input-row input[type=text]{flex:1;font-size:11.5px;padding:3px 7px;border:0.5px solid #85B7EB;border-radius:6px;background:#fff;color:#1a1a1a;outline:none}
+.custom-input-row input[type=text]:focus{border-color:#185FA5}
+.del-btn{width:18px;height:18px;border:0.5px solid #85B7EB;border-radius:50%;background:transparent;color:#378ADD;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s}
+.del-btn:hover{background:#E6F1FB;color:#A32D2D;border-color:#F09595}
+.add-btn{margin-top:0.5rem;width:100%;padding:5px;font-size:11.5px;border:0.5px dashed #85B7EB;border-radius:8px;background:transparent;color:#378ADD;cursor:pointer;transition:background 0.15s}
+.add-btn:hover{background:#E6F1FB}
+
+.timer-start-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1rem}
+.timer-block{display:flex;flex-direction:column;align-items:center;gap:0.6rem;flex:1}
+.timer-display{font-size:42px;font-weight:500;color:#0C447C;font-variant-numeric:tabular-nums;letter-spacing:-1px}
+.timer-controls{display:flex;align-items:center;gap:8px}
+.t-btn{width:28px;height:28px;border:0.5px solid #85B7EB;border-radius:50%;background:transparent;font-size:15px;cursor:pointer;color:#185FA5;display:flex;align-items:center;justify-content:center;transition:background 0.15s}
+.t-btn:hover{background:#E6F1FB}
+.timer-label{font-size:10px;color:#378ADD;text-align:center}
+.start-btn{width:100px;height:100px;border-radius:50%;background:#185FA5;border:none;color:#E6F1FB;font-size:17px;font-weight:500;cursor:pointer;transition:transform 0.15s,background 0.15s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.start-btn:hover{background:#0C447C;transform:scale(1.04)}
+.start-btn:active{transform:scale(0.97)}
+.warning{font-size:11px;color:#c0392b;text-align:center;min-height:14px;padding:0 1rem 0.5rem}
+
+#page2{border:0.5px solid #B5D4F4;border-radius:12px;overflow:hidden;background:#fff;position:relative;min-height:520px}
+.p2-body{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;padding:1.25rem;padding-top:4.5rem;min-height:520px}
+.countdown-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;z-index:10;border-radius:12px;gap:1.25rem}
+.countdown-num{font-size:80px;font-weight:500;color:#185FA5;animation:pop 0.4s ease}
+.skip-btn{padding:7px 20px;border:0.5px solid #85B7EB;border-radius:8px;background:transparent;color:#378ADD;font-size:13px;cursor:pointer}
+@keyframes pop{0%{transform:scale(1.5);opacity:0}100%{transform:scale(1);opacity:1}}
+.p2-timer{font-size:60px;font-weight:500;color:#0C447C;font-variant-numeric:tabular-nums;letter-spacing:-2px}
+.p2-timer.urgent{color:#A32D2D}
+.progress-bar-wrap{width:100%;max-width:320px;height:4px;background:#B5D4F4;border-radius:2px;overflow:hidden}
+.progress-bar{height:100%;background:#185FA5;border-radius:2px;transition:width 0.5s}
+.symptom-card{width:100%;max-width:320px;min-height:72px;background:#E6F1FB;border:0.5px solid #85B7EB;border-radius:12px;display:flex;align-items:center;justify-content:center;padding:0.9rem 1.5rem;font-size:19px;font-weight:500;color:#0C447C;text-align:center}
+.p2-controls{display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;justify-content:center}
+.p2-btn{padding:7px 14px;border:0.5px solid #85B7EB;border-radius:8px;background:transparent;color:#185FA5;font-size:13px;cursor:pointer;transition:background 0.15s;white-space:nowrap}
+.p2-btn:hover{background:#E6F1FB}
+.p2-btn.primary{background:#185FA5;border-color:#185FA5;color:#E6F1FB}
+.p2-btn.primary:hover{background:#0C447C}
+.icon-btn{width:38px;height:38px;border:0.5px solid #85B7EB;border-radius:50%;background:transparent;color:#185FA5;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background 0.15s;flex-shrink:0}
+.icon-btn:hover{background:#E6F1FB}
+.next-symp-btn{padding:7px 14px;border:0.5px solid #85B7EB;border-radius:8px;background:transparent;color:#185FA5;font-size:13px;cursor:pointer;white-space:nowrap}
+.next-symp-btn:hover{background:#E6F1FB}
+.big-next-btn{padding:11px 28px;background:#185FA5;border:none;border-radius:8px;color:#E6F1FB;font-size:14px;font-weight:500;cursor:pointer}
+.big-next-btn:hover{background:#0C447C}
+.done-wrap{display:none;flex-direction:column;align-items:center;gap:1.25rem;padding:2rem 1rem}
+.done-msg{font-size:20px;font-weight:500;color:#0C447C;text-align:center}
+.done-sub{font-size:13px;color:#378ADD;text-align:center}
+
+.sym-toggle{width:100%;text-align:left;padding:0.5rem 0;font-size:12px;color:#185FA5;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;gap:4px}
+.sym-toggle .arr{transition:transform 0.2s;display:inline-block}
+.sym-toggle.open .arr{transform:rotate(90deg)}
+#sym-collapse{overflow:hidden;max-height:0;transition:max-height 0.3s ease}
+#sym-collapse.open{max-height:1200px}
+
+/* Desktop overrides */
+@media(min-width:600px){
+  body{padding:1.5rem}
+  .symptom-grid{grid-template-columns:1fr 1fr 1fr}
+  .symptom-item label{font-size:12.5px}
+  .custom-input-row input[type=text]{font-size:12.5px}
+  .custom-input-row input[type=checkbox]{width:14px;height:14px}
+  .symptom-item input[type=checkbox]{width:14px;height:14px}
+  .timer-display{font-size:52px}
+  .start-btn{width:120px;height:120px;font-size:19px}
+  .p2-timer{font-size:68px}
+  .symptom-card{font-size:21px}
+  .p2-body{padding-top:5rem}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="page1" class="page active">
+  <div class="p-header">
+    <div class="logo">2분 CPX <span>Clinical Performance Exam</span></div>
+  </div>
+  <div class="p1-body">
+    <div class="section">
+      <div class="sec-title">주증상 선택</div>
+      <div class="sel-row">
+        <button class="sel-btn" onclick="toggleAll(true)">전체 선택</button>
+        <button class="sel-btn" onclick="toggleAll(false)">전체 해제</button>
+      </div>
+      <button class="sym-toggle open" id="sym-toggle-btn" onclick="toggleSymList()">
+        <span class="arr">›</span> 주증상 목록 보기/숨기기
+      </button>
+      <div id="sym-collapse" class="open">
+        <div class="symptom-grid" id="symptom-list"></div>
+        <div id="custom-list"></div>
+        <button class="add-btn" onclick="addCustomRow()">+ 주증상 추가</button>
+      </div>
+    </div>
+
+    <div class="timer-start-row">
+      <div class="timer-block">
+        <div class="sec-title">타이머 설정</div>
+        <div class="timer-display" id="timer-preview">2:00</div>
+        <div class="timer-controls">
+          <button class="t-btn" onclick="adjustTimer(-10)">−</button>
+          <span style="font-size:11px;color:#378ADD">10초</span>
+          <button class="t-btn" onclick="adjustTimer(10)">+</button>
+        </div>
+        <div class="timer-label">기본값 2분 / 최소 10초</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:0.5rem">
+        <div class="sec-title">시작</div>
+        <button class="start-btn" onclick="startSession()">시작</button>
+      </div>
+    </div>
+    <div class="warning" id="warn"></div>
+  </div>
+</div>
+
+<div id="page2" class="page">
+  <div class="p-header">
+    <div class="logo">2분 CPX <span>Clinical Performance Exam</span></div>
+    <div class="counter-badge" id="counter">0/0</div>
+  </div>
+  <div class="countdown-overlay" id="countdown-overlay" style="display:none">
+    <div class="countdown-num" id="countdown-num">3</div>
+    <button class="skip-btn" onclick="skipCountdown()">바로 시작</button>
+  </div>
+  <div class="p2-body" id="p2-body">
+    <div class="p2-timer" id="p2-timer">2:00</div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="prog-bar" style="width:100%"></div></div>
+    <div class="symptom-card" id="symptom-card" style="font-size:14px;color:#378ADD">주증상 보기를 눌러 학습하세요.</div>
+    <div class="p2-controls" id="p2-controls">
+      <button class="p2-btn" onclick="goHome()">‹ 처음으로</button>
+      <button class="p2-btn primary" id="show-btn" onclick="showSymptom()">주증상 보기</button>
+      <button class="icon-btn" id="playstop-btn" onclick="toggleTimer()">⏸</button>
+      <button class="next-symp-btn" id="next-symp-btn" onclick="nextSymptom()">다음 ›</button>
+    </div>
+    <div id="next-wrap" style="display:none">
+      <button class="big-next-btn" onclick="nextSymptom()">다음 주증상 연습하기</button>
+    </div>
+    <div class="done-wrap" id="done-wrap">
+      <div class="done-msg">🎉 학습이 종료되었습니다!</div>
+      <div class="done-sub" id="done-sub"></div>
+      <button class="big-next-btn" onclick="goHome()">처음으로 돌아가기</button>
+    </div>
+  </div>
+</div>
+
+</div>
+<script>
+const SYMPTOMS=['급성 복통','소변량 변화(다뇨증/핍뇨)','두통','소화불량/만성 복통','붉은색 소변','경련','토혈','배뇨 이상/소변찔끔증','근력/감각 이상','혈변','발열','의식장애','구토','쉽게 멍이 듦','떨림/운동 이상','배변 이상(변비/설사)','피로','유방통/유방덩이','황달','체중 감소','질분비물/질출혈','가슴 통증','체중 증가/비만','월경 이상/월경통','실신','관절 통증/부기','산전 진찰','두근거림','목 통증/허리 통증','성장/발달 지연','고혈압','피부 발진','예방접종','이상지질혈증','기분 변화','음주/금연 상담','기침','불안','물질 오남용','콧물/코막힘','수면장애','나쁜 소식 전하기','객혈','기억력 저하','가정 폭력/성 폭력','호흡곤란','어지럼','자살'];
+
+let timerSecs=120,p2Secs=120,p2Total=120;
+let timerInterval=null,running=false;
+let remaining=[],totalCount=0,countdownTO=null;
+
+function buildList(){
+  const el=document.getElementById('symptom-list');
+  el.innerHTML='';
+  SYMPTOMS.forEach((s,i)=>{
+    const row=document.createElement('div');
+    row.className='symptom-item';
+    row.innerHTML=`<input type="checkbox" id="s${i}" value="${s}"><label for="s${i}">${s}</label>`;
+    el.appendChild(row);
+  });
+}
+
+function toggleSymList(){
+  const btn=document.getElementById('sym-toggle-btn');
+  const col=document.getElementById('sym-collapse');
+  btn.classList.toggle('open');
+  col.classList.toggle('open');
+}
+
+function addCustomRow(){
+  const list=document.getElementById('custom-list');
+  const row=document.createElement('div');
+  row.className='custom-input-row';
+  const cb=document.createElement('input');cb.type='checkbox';cb.checked=true;cb.value='';
+  const inp=document.createElement('input');inp.type='text';inp.placeholder='새로운 주증상 입력';
+  inp.addEventListener('input',()=>{cb.value=inp.value.trim();});
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();});
+  const del=document.createElement('button');del.className='del-btn';del.textContent='−';
+  del.addEventListener('click',()=>row.remove());
+  row.appendChild(cb);row.appendChild(inp);row.appendChild(del);
+  list.appendChild(row);
+  setTimeout(()=>inp.focus(),50);
+}
+
+function toggleAll(val){
+  document.querySelectorAll('#symptom-list input[type=checkbox]').forEach(c=>c.checked=val);
+}
+
+function adjustTimer(d){
+  timerSecs=Math.max(10,timerSecs+d);
+  document.getElementById('timer-preview').textContent=fmt(timerSecs);
+}
+
+function fmt(s){const m=Math.floor(s/60),sc=s%60;return m+':'+(sc<10?'0':'')+sc;}
+
+function getChecked(){
+  const vals=[];
+  document.querySelectorAll('#symptom-list input[type=checkbox]:checked').forEach(c=>{const v=c.value.trim();if(v)vals.push(v);});
+  document.querySelectorAll('#custom-list input[type=checkbox]:checked').forEach(c=>{const v=c.value.trim();if(v)vals.push(v);});
+  return vals;
+}
+
+function startSession(){
+  const checked=getChecked();
+  if(checked.length===0){document.getElementById('warn').textContent='하나 이상의 주증상을 고르세요.';return;}
+  document.getElementById('warn').textContent='';
+  remaining=shuffle([...checked]);totalCount=remaining.length;p2Total=timerSecs;
+  goPage2();
+}
+
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+
+function goPage2(){
+  document.getElementById('page1').classList.remove('active');
+  document.getElementById('page2').classList.add('active');
+  resetP2UI();runCountdown(3);
+}
+
+function resetP2UI(){
+  clearInterval(timerInterval);running=false;p2Secs=p2Total;
+  document.getElementById('p2-timer').textContent=fmt(p2Total);
+  document.getElementById('p2-timer').classList.remove('urgent');
+  document.getElementById('p2-timer').style.display='';
+  document.getElementById('prog-bar').style.width='100%';
+  document.getElementById('prog-bar').parentElement.style.display='';
+  document.getElementById('symptom-card').innerHTML='주증상 보기를 눌러 학습하세요.';
+  document.getElementById('symptom-card').style.fontSize='14px';
+  document.getElementById('symptom-card').style.color='#378ADD';
+  document.getElementById('symptom-card').style.display='';
+  document.getElementById('next-wrap').style.display='none';
+  document.getElementById('done-wrap').style.display='none';
+  document.getElementById('show-btn').style.display='';
+  document.getElementById('playstop-btn').textContent='⏸';
+  document.getElementById('playstop-btn').style.display='';
+  document.getElementById('next-symp-btn').style.display='';
+  document.getElementById('p2-controls').style.display='';
+  updateCounter();
+}
+
+function updateCounter(){
+  document.getElementById('counter').textContent='남은 주증상: '+remaining.length+'/'+totalCount;
+}
+
+function runCountdown(n){
+  const overlay=document.getElementById('countdown-overlay');
+  const numEl=document.getElementById('countdown-num');
+  overlay.style.display='flex';
+  numEl.textContent=n===0?'시작!':n;
+  if(n===0){setTimeout(()=>{overlay.style.display='none';startTimer();},500);return;}
+  countdownTO=setTimeout(()=>{
+    numEl.style.animation='none';void numEl.offsetWidth;numEl.style.animation='pop 0.4s ease';
+    runCountdown(n-1);
+  },750);
+}
+
+function skipCountdown(){
+  clearTimeout(countdownTO);
+  document.getElementById('countdown-overlay').style.display='none';
+  startTimer();
+}
+
+function startTimer(){
+  running=true;document.getElementById('playstop-btn').textContent='⏸';
+  clearInterval(timerInterval);
+  timerInterval=setInterval(()=>{
+    if(!running)return;p2Secs--;
+    document.getElementById('p2-timer').textContent=fmt(p2Secs);
+    document.getElementById('p2-timer').classList.toggle('urgent',p2Secs<=10);
+    document.getElementById('prog-bar').style.width=(p2Secs/p2Total*100)+'%';
+    if(p2Secs<=0){clearInterval(timerInterval);running=false;timerDone();}
+  },1000);
+}
+
+function toggleTimer(){
+  if(running){running=false;document.getElementById('playstop-btn').textContent='▶';}
+  else{running=true;document.getElementById('playstop-btn').textContent='⏸';}
+}
+
+function timerDone(){
+  document.getElementById('show-btn').style.display='none';
+  document.getElementById('playstop-btn').style.display='none';
+  document.getElementById('next-symp-btn').style.display='none';
+  if(remaining.length===0){showDone();}
+  else{document.getElementById('next-wrap').style.display='block';}
+}
+
+function showSymptom(){
+  if(remaining.length===0){showDone();return;}
+  const idx=Math.floor(Math.random()*remaining.length);
+  const sym=remaining.splice(idx,1)[0];
+  document.getElementById('symptom-card').textContent=sym;
+  document.getElementById('symptom-card').style.fontSize='19px';
+  document.getElementById('symptom-card').style.color='#0C447C';
+  updateCounter();
+  document.getElementById('show-btn').style.display='none';
+}
+
+function nextSymptom(){
+  clearInterval(timerInterval);
+  if(remaining.length===0){showDone();return;}
+  resetP2UI();runCountdown(3);
+}
+
+function showDone(){
+  clearInterval(timerInterval);running=false;
+  document.getElementById('p2-timer').style.display='none';
+  document.getElementById('prog-bar').parentElement.style.display='none';
+  document.getElementById('symptom-card').style.display='none';
+  document.getElementById('next-wrap').style.display='none';
+  document.getElementById('p2-controls').style.display='none';
+  document.getElementById('done-wrap').style.display='flex';
+  document.getElementById('done-sub').textContent='총 '+totalCount+'개 주증상 학습 완료';
+}
+
+function goHome(){
+  clearTimeout(countdownTO);clearInterval(timerInterval);running=false;
+  document.getElementById('page2').classList.remove('active');
+  document.getElementById('page1').classList.add('active');
+}
+
+buildList();
+</script>
+</body>
+</html>
